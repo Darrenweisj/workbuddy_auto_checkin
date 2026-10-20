@@ -45,10 +45,11 @@ jobs:
           "$PY" -c 'import sys; print("使用解释器:", sys.executable, sys.version.split()[0])'
           echo "python_path=$PY" >> "$GITHUB_OUTPUT"
 
-      - name: 执行签到与派猫猫
+      - name: 执行双账号签到与派猫猫
         id: run
         env:
           WB_ACCESS_TOKEN: ${{ secrets.WB_ACCESS_TOKEN }}
+          WB_ACCESS_TOKEN_2: ${{ secrets.WB_ACCESS_TOKEN_2 }}
           FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
           WB_ENDPOINT: https://copilot.tencent.com
           WB_RESULT_FILE: ${{ runner.temp }}/wb_result.json
