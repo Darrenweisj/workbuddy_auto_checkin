@@ -221,7 +221,7 @@ workflow 中脚本以 `exit 0` 收尾，只对未完成项发 `::warning::`，�
 
 ## 接口
 
-均从客户端 `app.asar` 中核对并经线上实测，非网络流传版本。所有响应统一是 `{code, msg, data}` 信封，业务字段在 `data` 内，脚本用 `unwrap()` 统一解包。
+签到和猫猫接口从客户端 `app.asar` 核对并经线上实测；积分余额接口已由本项目的 GitHub Actions 实测。响应按 `{code, msg, data}` 解包；余额取 `data.Packages` 内积分包的 `CycleRemainCapacity` 并求和。
 
 ```text
 POST /v2/billing/meter/checkin-activity-status   查询今日签到状态
