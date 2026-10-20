@@ -11,6 +11,7 @@
 凭证来自 GitHub Secret（由本机 refresh_token.py 注入），只读环境变量，不落盘、不打日志。
 """
 
+from decimal import Decimal, InvalidOperation
 import json
 import os
 import ssl
@@ -167,7 +168,7 @@ def run_checkin(headers, endpoint):
         cum = dig(s, "total_credits")
         tail = ""
         if streak is not None:
-            tail = "（连续 %s 天%s）" % (streak, "，累计 %s 积分" % cum if cum is not None else "")
+            tail = "（连续 %s 天%s）" % (streak, "，本期签到累计 %s 积分" % cum if cum is not None else "")
         return True, {"result": "CLAIMED", "credit": credit,
                       "report": "成功领取 %s 积分%s%s" % (credit, bonus, tail)}
 
@@ -175,6 +176,49 @@ def run_checkin(headers, endpoint):
         return False, {"result": "ERROR",
                        "report": "领取失败：%s（HTTP %s）" % (cbody.get("msg") or cbody.get("code"), ccode)}
     return False, {"result": "UNKNOWN", "report": "未识别的领取返回"}
+
+
+def run_credit_balance(headers, endpoint):
+    """查询账户当前可用积分，不记录原始计费响应。"""
+    code, body = post(endpoint + "/billing/meter/get-user-resource-summary", headers, {})
+    if not api_ok(code, body):
+        log("  [积分余额] 查询失败（HTTP %s）" % code)
+        return None
+
+    packages = dig(unwrap(body), "Packages")
+    if not isinstance(packages, list):
+        log("  [积分余额] 返回数据格式无法识别")
+        return None
+
+    total = Decimal("0")
+    found = False
+    for package in packages:
+        if not isinstance(package, dict):
+            continue
+        unit = package.get("CapacityUnit")
+        if not isinstance(unit, str) or unit.lower() not in ("credit", "credits"):
+            continue
+        remaining = package.get("CycleRemainCapacity")
+        if remaining is None:
+            continue
+        try:
+            amount = Decimal(str(remaining))
+        except InvalidOperation:
+            continue
+        if not amount.is_finite():
+            continue
+        total += amount
+        found = True
+
+    if not found:
+        log("  [积分余额] 未找到可用积分包")
+        return None
+
+    result = format(total, ",f")
+    if "." in result:
+        result = result.rstrip("0").rstrip(".")
+    log("  [积分余额] 查询成功：%s 积分" % result)
+    return result
 
 
 def _already_checked_in(code, body):
@@ -207,7 +251,7 @@ def _fmt_already(status, via="今日已签过"):
     if dig(status, "streak_days") is not None:
         parts.append("连续 %s 天" % dig(status, "streak_days"))
     if dig(status, "total_credits") is not None:
-        parts.append("累计 %s 积分" % dig(status, "total_credits"))
+        parts.append("本期签到累计 %s 积分" % dig(status, "total_credits"))
     return "%s（%s）" % (via, "，".join(parts)) if parts else via
 
 
@@ -352,9 +396,18 @@ def _run_account(account_name, token, webhook, endpoint):
         buddy = {"result": "ERROR", "report": "猫猫模块异常（%s: %s）" % (type(e).__name__, e)}
     log("  结论：%s" % buddy.get("report", ""))
 
+    # 独立查询当前余额：余额接口异常不改变签到结论
+    try:
+        balance = run_credit_balance(headers, endpoint)
+    except Exception as e:
+        log("  [积分余额] 查询异常：%s" % type(e).__name__)
+        balance = None
+    balance_line = ("💰 当前积分余额：%s 积分" % balance
+                    if balance is not None else "💰 当前积分余额：暂时无法查询")
+
     # 整体成败只看签到：签到成功即成功
     overall_ok = checkin_ok
-    checkin_line = ("✅ " if checkin_ok else "❌ ") + checkin["report"]
+    checkin_line = ("✅ " if checkin_ok else "❌ ") + checkin["report"] + "\n" + balance_line
     buddy_line = ("🐱 " + buddy.get("report", "")) if buddy.get("report") else "🐱 无结论"
 
     if webhook:
