@@ -374,8 +374,8 @@ def main():
     webhook = os.environ.get("FEISHU_WEBHOOK")
     endpoint = os.environ.get("WB_ENDPOINT") or DEFAULT_ENDPOINT
     account_specs = [
-        ("账号1", "WB_ACCESS_TOKEN"),
-        ("账号2", "WB_ACCESS_TOKEN_2"),
+        ("账号1（7721）", "WB_ACCESS_TOKEN"),
+        ("账号2（4023）", "WB_ACCESS_TOKEN_2"),
     ]
     accounts = []
     for account_name, env_name in account_specs:
