@@ -150,7 +150,7 @@ python refresh_token.py
 
 ![](assets/github_配置action的飞书、wb_access_token.png)
 
-需要填两条：
+需要填：
 
 | Name | Secret 里填什么 |
 | --- | --- |
@@ -258,7 +258,7 @@ wps/                          WPS 金山文档版（脚本 + 说明，见 wps/RE
 
 ## 常见问题
 
-**令牌过期** — token 由客户端签发，有效期约 28 天（`expiresIn` 2419200）。日志或飞书出现「认证被拒」时，本机重跑 `python refresh_token.py --gh-repo OWNER/REPO` 覆盖即可（`OWNER/REPO` 换成你自己的仓库；exe 同理：`refresh_token.exe --gh-repo OWNER/REPO`）。
+**令牌过期** — token 由客户端签发，有效期约 28 天（`expiresIn` 2419200）。账号1重新运行 `python refresh_token.py --gh-repo OWNER/REPO`；账号2先切换到账号2，再运行 `python refresh_token.py --gh-repo OWNER/REPO --secret-name WB_ACCESS_TOKEN_2`。第二账号要用新版 `.py`，不要用尚未更新的 exe。
 
 **fork 之后 Actions 页签是空的** — fork 来的仓库默认不启用 Actions。进 Actions 页签，点页面中间的 **I understand my workflows, go ahead and enable them** 启用一次即可。
 
