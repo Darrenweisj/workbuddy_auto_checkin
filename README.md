@@ -10,12 +10,10 @@ WorkBuddy「Buddy 加油站」的每日自动化：**签到领积分**、**派�
 > | --- | --- | --- |
 > | 适合 | 习惯 GitHub 的用户 | **不想碰 GitHub / 零命令行** 的用户 |
 > | 托管 | GitHub Actions 免费定时任务 | 金山文档智能表格脚本 + 免费定时任务 |
-> | 配置 | Fork 仓库 + 填两个 Secret | 建表格 → 粘脚本 → 填两个单元格 |
+> | 配置 | Fork 仓库 + 填入所需 Secrets（双账号时 3 条） | 建表格 → 粘脚本 → 填两个单元格 |
 > | 结果 | Actions 日志 / 飞书卡片 | 直接回写表格 / 飞书卡片 |
 >
-> 两种版本的 token 都由本机导出一次（[第 4 步](#第-4-步导出登录凭证二选一)）：
-> 装了 Python 就跑 `refresh_token.py`；没装 Python 直接下载仓库里的
-> **`refresh_token.exe`** 双击运行，无需任何环境。
+> 每个 WorkBuddy 账号都要在本机分别导出自己的 token。单账号可用 Python 脚本或 `refresh_token.exe`；第二个账号需用新版 `refresh_token.py` 指定 Secret 名称。
 
 ## 特性
 
@@ -100,7 +98,7 @@ WorkBuddy「Buddy 加油站」的每日自动化：**签到领积分**、**派�
 
 **先选运行形式：**
 
-- **没装 Python？** 直接双击仓库里的 **`refresh_token.exe`**（用法与 `.py` 完全一致，把下面命令里的 `python refresh_token.py` 换成 `refresh_token.exe` 即可）。首次运行 Windows SmartScreen 可能拦截，点 **更多信息 → 仍要运行**。
+- **没装 Python？** 单账号可双击仓库里的 **`refresh_token.exe`**。第二个账号需要用新版 `refresh_token.py` 的 `--secret-name` 参数；当前 exe 尚未重新打包，不支持这个参数。
 - 装了 Python：继续往下按命令操作（脚本零第三方依赖，只需 Python 3.8+）。
 
 **方式 A：电脑上装了 gh CLI —— 自动写入，最省事**
@@ -127,7 +125,26 @@ python refresh_token.py
 
 
 
-### 第 5 步：把两个 Secret 填进仓库
+#### 添加第二个 WorkBuddy 账号（可选）
+
+1. 先在 WorkBuddy 客户端切换并登录第二个账号。
+2. 使用自己仓库中的新版 `refresh_token.py`。在项目目录运行：
+
+   ```powershell
+   python refresh_token.py --secret-name WB_ACCESS_TOKEN_2
+   ```
+
+3. 按脚本提示把 token 保存到 `WB_ACCESS_TOKEN_2`。若已安装并登录 GitHub CLI，也可让脚本自动写入：
+
+   ```powershell
+   python refresh_token.py --gh-repo OWNER/REPO --secret-name WB_ACCESS_TOKEN_2
+   ```
+
+   将 `OWNER/REPO` 换成自己的仓库名。没有 GitHub CLI 时，脚本会显示 token，手动粘贴到 Secret；不要把 token 发到聊天或提交到仓库。
+
+> 运行第二条命令前要先确认 WorkBuddy 当前登录的是账号2。第二个账号的通知会标为“账号2”。
+
+### 第 5 步：把 Secrets 填进仓库
 
 打开**你自己的仓库** → **Settings** → 左侧 **Secrets and variables** → **Actions** → 点绿色的 **New repository secret**：
 
@@ -137,11 +154,11 @@ python refresh_token.py
 
 | Name | Secret 里填什么 |
 | --- | --- |
-| `WB_ACCESS_TOKEN` | 第 4 步方式 B 复制的那串字符 |
-| `FEISHU_WEBHOOK` | 第 3 步拿到的飞书机器人地址 |
+| `WB_ACCESS_TOKEN` | 账号1的 WorkBuddy token |
+| `WB_ACCESS_TOKEN_2` | 账号2的 WorkBuddy token（可选；添加后会运行账号2） |
+| `FEISHU_WEBHOOK` | 第 3 步拿到的飞书机器人地址（两个账号共用） |
 
-> 方式 A 已经自动写入 `WB_ACCESS_TOKEN` 的，这里只需要再填 `FEISHU_WEBHOOK` 一条。
-> 填完这个页面应该能看到两条记录（如上面截图所示）。
+> 自动写入账号1 token 后，只需再填飞书 Webhook；添加账号2时再增加 `WB_ACCESS_TOKEN_2`。两个账号共用同一个机器人地址，飞书会分别收到标有“账号1”和“账号2”的卡片。
 
 ### 第 6 步：手动跑一次验证
 
@@ -158,7 +175,8 @@ python refresh_token.py
 
 | 变量 | 必填 | 默认 | 说明 |
 | --- | --- | --- | --- |
-| `WB_ACCESS_TOKEN` | 是 | — | 访问令牌。缺失则直接退出（exit 2） |
+| `WB_ACCESS_TOKEN` | 是* | — | 账号1访问令牌；至少配置 `WB_ACCESS_TOKEN` 或 `WB_ACCESS_TOKEN_2` 一个 |
+| `WB_ACCESS_TOKEN_2` | 否 | — | 账号2访问令牌；未配置时跳过账号2 |
 | `FEISHU_WEBHOOK` | 建议 | — | 飞书自定义机器人地址。缺失则不推送，仅打印日志 |
 | `WB_ENDPOINT` | 否 | `https://copilot.tencent.com` | 接口地址 |
 | `WB_RESULT_FILE` | 否 | — | 写入 Markdown 汇总表，供 Actions 的 step summary 使用 |
