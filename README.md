@@ -226,6 +226,7 @@ workflow 中脚本以 `exit 0` 收尾，只对未完成项发 `::warning::`，�
 ```text
 POST /v2/billing/meter/checkin-activity-status   查询今日签到状态
 POST /v2/billing/meter/daily-checkin             领取签到积分（已签返回 code 10001）
+POST /billing/meter/get-user-resource-summary  查询账户当前可用积分
 
 GET  /v2/activity/growth/buddy/travel/status     查询旅行状态
 POST /v2/activity/growth/buddy/travel/claim      领取已到家的旅行积分
