@@ -1,6 +1,9 @@
 name: Buddy 加油站每日自动化
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     # GitHub 的 cron 是尽力而为：高负载时会延迟，甚至静默丢弃整次运行。
     # 因此设三个时段互为备份 —— 只要有一个跑到，当天就完成了。
