@@ -10,7 +10,7 @@
     python refresh_token.py --secret-name WB_ACCESS_TOKEN_2
     python refresh_token.py --gh-repo OWNER/REPO --secret-name WB_ACCESS_TOKEN_2
                                                   # 可指定 Secret 名；有 gh CLI 时直接写入
-（打包成 refresh_token.exe 后用法相同，双击运行等价于无参数形式）
+（当前打包版 refresh_token.exe 只使用默认 Secret 名；第二个账号请用本脚本的 --secret-name 参数）
 
 安全约定：
   - 明文 token 只出现在本进程内存与最终那一次目标位置；
